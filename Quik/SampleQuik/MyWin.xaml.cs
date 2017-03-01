@@ -31,10 +31,14 @@ namespace SampleQuik
             /*       RichSecurity RSec = new RichSecurity() { Id = "SIH7@FORTS" };
                    RSec.loadCandles();
        foreach (Candle c in RSec.candles) Console.WriteLine("Security:{0}  Time:{2}  ClosePrice:{1}",c.Security,c.ClosePrice, c.CloseTime);*/
-            var sh = new StorageHistory() { security = new Security { Id = "SBER@TQBR" }, timespan = TimeSpan.FromMinutes(5) };
+
+            /*var sh = new StorageHistory() { security = new Security { Id = "SBER@TQBR" }, timespan = TimeSpan.FromMinutes(5) };
             sh.loadTrades();
             var trades=OrderAnalazyer.consolidateOrders(sh.trades);
-            OrderAnalazyer.printHighestVolume(trades);
+            OrderAnalazyer.printHighestVolume(trades);*/
+
+            var TS = new TestSpreader();
+            TS.start();
         }
     }
 }

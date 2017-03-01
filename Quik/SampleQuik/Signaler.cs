@@ -3,12 +3,14 @@
     using Ecng.Collections;
     using StockSharp.Algo;
     using StockSharp.Algo.Candles;
+    using StockSharp.Algo.Derivatives;
     using StockSharp.BusinessEntities;
     using StockSharp.Messages;
     using System;
     using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Timers;
 
     class Signaler //current time. provides Forecasts
     {
@@ -421,29 +423,62 @@
 
     class TestSpreader
     {
-        static public Portfolio futuresPortfolio = new Portfolio() { Name = "4102KEU" };
-        Security futures = new Security() { Id = "RIH7@FORTS" };
-        Security option = new Security() { Id = "RI117500BC7A@FORTS" };
+        Portfolio futuresPortfolio;// = new Portfolio() { Name = "4102KEU" };
+        Security futures;// = new Security() { Id = "RIH7@FORTS" };
+        Security option;// = new Security() { Id = "RI117500BC7@FORTS" }; //RI117500BC7A
+        BlackScholes BS;
         decimal futuresBought = 0;
         decimal optionsBought = 0;
         Order buyOrder;
         Order sellOrder;
+        Timer timer;
         decimal curDelta;
 
-        void start()
+        public TestSpreader()
+        {
+            timer = new Timer() { Interval = 1000 };
+            option = MainWindow.Instance.Trader.Securities.FirstOrDefault(o => o.Id == "RI110000BC7@FORTS");
+            futures = MainWindow.Instance.Trader.Securities.FirstOrDefault(o => o.Id == "RIH7@FORTS");
+            futuresPortfolio = MainWindow.Instance.Trader.Portfolios.FirstOrDefault(o => o.Name == "SPBFUTJR3L9");
+            MainWindow.Instance.Trader.RegisterSecurity(futures);
+            MainWindow.Instance.Trader.RegisterSecurity(option);
+            BS = new BlackScholes(option, MainWindow.Instance.Trader, MainWindow.Instance.Trader);
+            buyOrder = new Order { Portfolio = futuresPortfolio, Security = option, Direction = Sides.Buy };
+            sellOrder = new Order { Portfolio = futuresPortfolio, Security = option, Direction = Sides.Sell };
+            System.Threading.Thread.Sleep(1000);
+        }
+
+        public void start()
         {
             MainWindow.Instance.Trader.MarketDepthChanged += Trader_MarketDepthChanged;
             MainWindow.Instance.Trader.OrderChanged += Trader_OrderChanged;
+            timer.Elapsed += Timer_Elapsed;
+            timer.Start();
         }
+
+        private void Timer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            requoteBids();
+            requoteAsks();
+        }
+
+        private void Trader_MarketDepthChanged(MarketDepth obj)
+        {
+            requoteBids();
+            requoteAsks();
+        }
+
         decimal checkDelta()
         {
-            return (option.Delta.GetValueOrDefault() * optionsBought)-futuresBought;
+            var delta = BS.Delta(DateTimeOffset.Now).GetValueOrDefault();
+            return delta;
         }
-        void stop()
+        public void stop()
         {
             MainWindow.Instance.Trader.MarketDepthChanged -= Trader_MarketDepthChanged;
             MainWindow.Instance.Trader.OrderChanged -= Trader_OrderChanged;
             MainWindow.Instance.Trader.CancelOrders();
+            timer.Stop();
         }
 
         private void Trader_OrderChanged(Order obj)
@@ -456,39 +491,76 @@
             }
         }
 
-        private void Trader_MarketDepthChanged(MarketDepth obj)
-        {
-        }
-
         void requoteBids()
         {
-            var volume = (1.3M - checkDelta()) / option.Delta.GetValueOrDefault();
-            if (volume > 0) placeOrder(buyOrder, getBidPrice(), volume);
+            var delta = checkDelta();
+            var volume = Decimal.Floor((1.3M - delta * optionsBought) / delta);
+            placeOrder(ref buyOrder, volume);
+            Console.WriteLine("Delta is:{0}.", delta);
         }
-        void placeOrder(Order ord, decimal price, decimal volume)
+
+        private void requoteAsks()
         {
-            if (volume == 0 && ord.State==OrderStates.Active) 
+            var delta = checkDelta();
+            var volume = Decimal.Floor((0.15M + delta * optionsBought) / delta);
+            placeOrder(ref sellOrder, volume);
+        }
+
+        void placeOrder(ref Order ord, decimal volume)
+        {
+
+
+
+            /*   var orderss = new Order
+               {
+                   Portfolio = futuresPortfolio,
+                   Price = getBidPrice(),
+                   Security = option,
+                   Volume = 1,
+                   Direction = Sides.Buy,
+               };
+               MainWindow.Instance.Trader.RegisterOrder(orderss);*/
+
+            var price = ord.Direction == Sides.Buy ? getBidPrice() : getAskPrice();
+            if (ord.State == OrderStates.Active && volume == ord.Volume && price==ord.Price) return;
+            if (volume == 0 || ord.State==OrderStates.Active) 
             {
                 MainWindow.Instance.Trader.CancelOrder(ord);
             }
-
+            ord.Price = price;
+            ord.Volume = volume;
+            var newOrder= ord.ReRegisterClone();
+            MainWindow.Instance.Trader.RegisterOrder(newOrder);
+            ord = newOrder;
+            Console.WriteLine("{0} order is registered. Price is {1}, Volume is {2}", ord.Direction, ord.Price, ord.Volume);
         }
 
-        bool isMyOrderInQuote(Quote q)
+   /*     bool isMyOrderInQuote(Quote q)
         {
             if (q.OrderDirection==Sides.Sell) return (sellOrder.State == OrderStates.Active) && (sellOrder.Price == q.Price) && (sellOrder.Volume > 0);
             if (q.OrderDirection == Sides.Buy) return (buyOrder.State == OrderStates.Active) && (buyOrder.Price == q.Price) && (buyOrder.Volume > 0);
             return false;
-        }
+        }*/
 
-        decimal getBidPrice()
+        decimal getBidPrice(bool urgent=false)
         {
+            //check if quote is mine!
             var theorPrice = option.TheorPrice.GetValueOrDefault();
             var bestAsk = option.BestAsk.Price;
-            var price = bestAsk >= theorPrice ? theorPrice - 10 : bestAsk - 20;
+            decimal price;
+            if (bestAsk >= theorPrice) price = urgent ? theorPrice - 10 : theorPrice - 20;
+            else price = urgent ? bestAsk - 20 : bestAsk - 40;
             return price;
         }
-
+        decimal getAskPrice(bool urgent = false)
+        {
+            var theorPrice = option.TheorPrice.GetValueOrDefault();
+            var BestBid = option.BestBid.Price;
+            decimal price;
+            if (BestBid <= theorPrice) price = urgent ? theorPrice + 10 : theorPrice + 20;
+            else price = urgent ? BestBid + 20 : BestBid + 40;
+            return price;
+        }
     }
 
 
