@@ -22,6 +22,7 @@ namespace SampleQuik
     /// </summary>
     public partial class MyWin : Window
     {
+        TestSpreader TS;
         public MyWin()
         {
             InitializeComponent();
@@ -37,8 +38,13 @@ namespace SampleQuik
             var trades=OrderAnalazyer.consolidateOrders(sh.trades);
             OrderAnalazyer.printHighestVolume(trades);*/
 
-            var TS = new TestSpreader();
+            TS = new TestSpreader();
             TS.start();
+        }
+
+        private void stop_Click(object sender, RoutedEventArgs e)
+        {
+            TS.stop();
         }
     }
 }

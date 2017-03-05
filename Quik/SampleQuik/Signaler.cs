@@ -57,7 +57,7 @@
         {
             int BigNumber = 1000;
             var asks = md.Asks;
-            decimal total=0;
+            decimal total = 0;
             for (int i = 0; i < asks.Length; i++)
             {
                 var ask = asks[i];
@@ -65,8 +65,8 @@
                 var price = ask.Price;
                 if (vol > BigNumber)
                 {
-                    Console.WriteLine("{0} pcs. spotted at {1}. In total above-{2} pcs.",vol,price,total);
-                    
+                    Console.WriteLine("{0} pcs. spotted at {1}. In total above-{2} pcs.", vol, price, total);
+
                 }
                 total += vol;
                 OnVolumeSpotted(ask);
@@ -81,7 +81,7 @@
         Security futSec;
         //  Portfolio stockPortfolio = portfolios.FirstOrDefault(p => p.Name == "131776");
         //  Portfolio futuresPortfolio = portfolios.FirstOrDefault(p => p.Name == "4102KEU");
-        Portfolio stockPortfolio = new Portfolio() { Name = "131776"};
+        Portfolio stockPortfolio = new Portfolio() { Name = "131776" };
         Portfolio futuresPortfolio = new Portfolio() { Name = "4102KEU" };
         decimal previousBestAsk;
         decimal previousBestBid;
@@ -102,8 +102,8 @@
 
         private void Trader_OrderChanged(Order order)
         {
-            var matched = order.GetMatchedVolume(MainWindow.Instance.Trader,true);
-            if ((order.Direction== Sides.Buy) && (matched == buyVolumeLeft))
+            var matched = order.GetMatchedVolume(MainWindow.Instance.Trader, true);
+            if ((order.Direction == Sides.Buy) && (matched == buyVolumeLeft))
             {
                 buyIsFilled = true;
                 var ord = new Order
@@ -131,7 +131,7 @@
                 };
                 MainWindow.Instance.Trader.RegisterOrder(ord);
             }
-            else {sellVolumeLeft -= matched; buyVolumeLeft += matched;}
+            else { sellVolumeLeft -= matched; buyVolumeLeft += matched; }
         }
 
         void stop()
@@ -142,7 +142,7 @@
         void registerSec(Security s)
         {
             MainWindow.Instance.Trader.RegisterMarketDepth(s);
-            
+
         }
         private void Trader_MarketDepthChanged(MarketDepth md)
         {
@@ -154,7 +154,7 @@
                 //exclude my orders--
                 if ((baseSec.BestPair.SpreadPrice >= minBaseSpread) && (futSec.BestPair.SpreadPrice >= minFuturesSpread)) //both prices are in nice range
                 {
-                    if ((md.BestBid.Price != previousBestBid) && (buyVolumeLeft!=0))  //best bid is changed && order is not filled
+                    if ((md.BestBid.Price != previousBestBid) && (buyVolumeLeft != 0))  //best bid is changed && order is not filled
                     {
                         MainWindow.Instance.Trader.CancelOrders(null, null, null, null, baseSec);
                         buyOrder = new Order
@@ -185,7 +185,7 @@
                 }
                 else { MainWindow.Instance.Trader.CancelOrders(null, null, null, null, baseSec); }
             }
-            
+
         }
 
     }
@@ -195,12 +195,12 @@
         public static List<RichTrade> consolidateOrders(IEnumerable<Trade> trades)
         {
             Trade previousTrade = new Trade();
-            decimal volume=0;
+            decimal volume = 0;
             decimal initPrice = 0;
-            List<RichTrade> volumes=new List<RichTrade>();
+            List<RichTrade> volumes = new List<RichTrade>();
             foreach (Trade trade in trades)
             {
-                if ((trade.Time == previousTrade.Time) && (trade.OrderDirection == previousTrade.OrderDirection)) volume+=trade.Volume;
+                if ((trade.Time == previousTrade.Time) && (trade.OrderDirection == previousTrade.OrderDirection)) volume += trade.Volume;
                 else
                 {
                     RichTrade rt = new RichTrade(previousTrade);
@@ -212,7 +212,7 @@
                     volume = trade.Volume;
                     initPrice = trade.Price;
                 }
-                     previousTrade = trade;
+                previousTrade = trade;
             }
             return volumes;
         }
@@ -221,7 +221,7 @@
             Console.WriteLine("There are {0} entries. Printing highest volume:", volumes.Count);
             List<RichTrade> SortedList = volumes.OrderByDescending(trade => trade.Volume).Take(50).ToList();
             foreach (RichTrade dec in SortedList) Console.WriteLine("{0} of {4}. Direction- {1}. Prices: {2}-{3}. Time:{5}",
-                dec.Volume,dec.OrderDirection,dec.Price,dec.EndPrice, dec.Security,dec.Time);
+                dec.Volume, dec.OrderDirection, dec.Price, dec.EndPrice, dec.Security, dec.Time);
 
         }
         public static void volumePeriodDependence(TimeSpan period, int numOfQuants)
@@ -275,8 +275,8 @@
         decimal strike;
         Security sec;
         Trade prevTrade;
-        decimal volume=1;
-        bool hedgeIfHigher=true;
+        decimal volume = 1;
+        bool hedgeIfHigher = true;
         bool hedged;
         Portfolio portf = new Portfolio() { Name = "131776" };
         void start()
@@ -310,7 +310,7 @@
 
                     if (ord.IsMatched())
                     {
-                        Console.WriteLine("Куплено {0} по цене {1}. Заявка номер {2}", ord.Security,ord.Price,ord.Id);
+                        Console.WriteLine("Куплено {0} по цене {1}. Заявка номер {2}", ord.Security, ord.Price, ord.Id);
                         hedged = true;
                     }
                 }
@@ -370,8 +370,8 @@
         {
             foreach (SpreadHolder sh in options)
             {
-                var volume = curDelta-futuresBought / sh.sec.Delta.GetValueOrDefault();
-                if (curDelta-futuresBought < 0.9M)
+                var volume = curDelta - futuresBought / sh.sec.Delta.GetValueOrDefault();
+                if (curDelta - futuresBought < 0.9M)
                 {
                     sh.changeVolume(sh.buyOrder, volume);
                 }
@@ -384,7 +384,7 @@
         }
     }
 
-    class SpreadHolder:CustomSpreadHolder
+    class SpreadHolder : CustomSpreadHolder
     {
         public Security sec { get; set; }
         public Order buyOrder;
@@ -423,25 +423,29 @@
 
     class TestSpreader
     {
+        Timer timer;
         Portfolio futuresPortfolio;// = new Portfolio() { Name = "4102KEU" };
         Security futures;// = new Security() { Id = "RIH7@FORTS" };
         Security option;// = new Security() { Id = "RI117500BC7@FORTS" }; //RI117500BC7A
         BlackScholes BS;
-        decimal futuresBought = 0;
+        decimal futuresSold = 0;
         decimal optionsBought = 0;
         Order buyOrder;
         Order sellOrder;
-        Timer timer;
-        decimal curDelta;
+        decimal buyPriceDiff = 0;
+        decimal buyPreviousMatched;
+        decimal sellPreviousMatched;
+
 
         public TestSpreader()
         {
             timer = new Timer() { Interval = 1000 };
-            option = MainWindow.Instance.Trader.Securities.FirstOrDefault(o => o.Id == "RI110000BC7@FORTS");
+            timer.Elapsed += Timer_Elapsed;
+            option = MainWindow.Instance.Trader.Securities.FirstOrDefault(o => o.Id == "RI112500BC7@FORTS");
             futures = MainWindow.Instance.Trader.Securities.FirstOrDefault(o => o.Id == "RIH7@FORTS");
             futuresPortfolio = MainWindow.Instance.Trader.Portfolios.FirstOrDefault(o => o.Name == "SPBFUTJR3L9");
-            MainWindow.Instance.Trader.RegisterSecurity(futures);
             MainWindow.Instance.Trader.RegisterSecurity(option);
+            MainWindow.Instance.Trader.RegisterSecurity(futures);
             BS = new BlackScholes(option, MainWindow.Instance.Trader, MainWindow.Instance.Trader);
             buyOrder = new Order { Portfolio = futuresPortfolio, Security = option, Direction = Sides.Buy };
             sellOrder = new Order { Portfolio = futuresPortfolio, Security = option, Direction = Sides.Sell };
@@ -452,14 +456,22 @@
         {
             MainWindow.Instance.Trader.MarketDepthChanged += Trader_MarketDepthChanged;
             MainWindow.Instance.Trader.OrderChanged += Trader_OrderChanged;
-            timer.Elapsed += Timer_Elapsed;
             timer.Start();
+        }
+
+        public void stop()
+        {
+            MainWindow.Instance.Trader.MarketDepthChanged -= Trader_MarketDepthChanged;
+            MainWindow.Instance.Trader.OrderChanged -= Trader_OrderChanged;
+            MainWindow.Instance.Trader.CancelOrders();
+            timer.Stop();
         }
 
         private void Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
             requoteBids();
             requoteAsks();
+            hedge();
         }
 
         private void Trader_MarketDepthChanged(MarketDepth obj)
@@ -473,98 +485,136 @@
             var delta = BS.Delta(DateTimeOffset.Now).GetValueOrDefault();
             return delta;
         }
-        public void stop()
+
+        bool activeOrPending(Order ord)
         {
-            MainWindow.Instance.Trader.MarketDepthChanged -= Trader_MarketDepthChanged;
-            MainWindow.Instance.Trader.OrderChanged -= Trader_OrderChanged;
-            MainWindow.Instance.Trader.CancelOrders();
-            timer.Stop();
+            if (ord.State == OrderStates.Active || ord.State == OrderStates.Pending) return true;
+            return false;
         }
 
         private void Trader_OrderChanged(Order obj)
         {
-            if (obj.Security.Id== option.Id)
+            if (obj.Security.Id == option.Id && (obj.State == OrderStates.Active || obj.State == OrderStates.Done))
             {
                 var matched = obj.GetMatchedVolume(MainWindow.Instance.Trader, true);
-                if (obj.Direction == Sides.Buy) optionsBought += matched;
-                else optionsBought -= matched;
+                if (obj.Direction == Sides.Buy)
+                {
+                    var newMatches = matched - buyPreviousMatched;
+                    buyPriceDiff = (buyPriceDiff * optionsBought + (obj.Price - option.TheorPrice.GetValueOrDefault()) * newMatches) / (optionsBought + newMatches);
+                    optionsBought += newMatches;
+                    buyPreviousMatched = matched;
+                }
+                else
+                {
+                    var newMatches = matched - sellPreviousMatched;
+                    optionsBought -= newMatches;
+                    sellPreviousMatched = matched;
+                }
+                Console.WriteLine("OptionsBought: {0}. buyPriceDiff: {1}", optionsBought, buyPriceDiff);
+                hedge();
+            }
+        }
+
+        void hedge()
+        {
+            var order = new Order()
+            {
+                Portfolio = futuresPortfolio,
+                Security = futures,
+                Volume = 1
+            };
+            if ((checkDelta() * optionsBought > 0.55M) && futuresSold == 0)
+            {
+                order.Direction = Sides.Sell;
+                order.Price = futures.MinPrice.GetValueOrDefault();
+                MainWindow.Instance.Trader.RegisterOrder(order);
+                futuresSold = 1;
+            }
+            if ((checkDelta() * optionsBought < 0.45M) && futuresSold == 1)
+            {
+                order.Direction = Sides.Buy;
+                order.Price = futures.MaxPrice.GetValueOrDefault();
+                MainWindow.Instance.Trader.RegisterOrder(order);
+                futuresSold = 0;
             }
         }
 
         void requoteBids()
         {
             var delta = checkDelta();
-            var volume = Decimal.Floor((1.3M - delta * optionsBought) / delta);
-            placeOrder(ref buyOrder, volume);
-            Console.WriteLine("Delta is:{0}.", delta);
+            var volume = Decimal.Floor((1.1M - delta * optionsBought) / delta);
+            if (option.BestAsk.Price > option.TheorPrice.GetValueOrDefault()) placeOrder(ref buyOrder, 0);
+            else placeOrder(ref buyOrder, volume);
         }
 
-        private void requoteAsks()
+        void requoteAsks()
         {
             var delta = checkDelta();
-            var volume = Decimal.Floor((0.15M + delta * optionsBought) / delta);
-            placeOrder(ref sellOrder, volume);
+            //var volume = Decimal.Floor((delta * optionsBought - 0.55M) / delta);
+            placeOrder(ref sellOrder, optionsBought);
         }
 
         void placeOrder(ref Order ord, decimal volume)
         {
-
-
-
-            /*   var orderss = new Order
-               {
-                   Portfolio = futuresPortfolio,
-                   Price = getBidPrice(),
-                   Security = option,
-                   Volume = 1,
-                   Direction = Sides.Buy,
-               };
-               MainWindow.Instance.Trader.RegisterOrder(orderss);*/
-
             var price = ord.Direction == Sides.Buy ? getBidPrice() : getAskPrice();
-            if (ord.State == OrderStates.Active && volume == ord.Volume && price==ord.Price) return;
-            if (volume == 0 || ord.State==OrderStates.Active) 
+            if (activeOrPending(ord) && volume == ord.Balance && price == ord.Price) return;
+            if (activeOrPending(ord))
             {
                 MainWindow.Instance.Trader.CancelOrder(ord);
+                buyPreviousMatched = 0;
+                sellPreviousMatched = 0;
             }
+            if (volume <= 0) return;
             ord.Price = price;
             ord.Volume = volume;
-            var newOrder= ord.ReRegisterClone();
+            var newOrder = ord.ReRegisterClone();
             MainWindow.Instance.Trader.RegisterOrder(newOrder);
             ord = newOrder;
-            Console.WriteLine("{0} order is registered. Price is {1}, Volume is {2}", ord.Direction, ord.Price, ord.Volume);
+            Console.WriteLine("{0} order: Price - {1}, Volume - {2}, Delta - {3}", ord.Direction, ord.Price, ord.Volume, Decimal.Round(checkDelta(), 4));
         }
 
-   /*     bool isMyOrderInQuote(Quote q)
+        /*     bool isMyOrderInQuote(Quote q)
+             {
+                 if (q.OrderDirection==Sides.Sell) return (sellOrder.State == OrderStates.Active) && (sellOrder.Price == q.Price) && (sellOrder.Volume > 0);
+                 if (q.OrderDirection == Sides.Buy) return (buyOrder.State == OrderStates.Active) && (buyOrder.Price == q.Price) && (buyOrder.Volume > 0);
+                 return false;
+             }*/
+        decimal getMiddle()
         {
-            if (q.OrderDirection==Sides.Sell) return (sellOrder.State == OrderStates.Active) && (sellOrder.Price == q.Price) && (sellOrder.Volume > 0);
-            if (q.OrderDirection == Sides.Buy) return (buyOrder.State == OrderStates.Active) && (buyOrder.Price == q.Price) && (buyOrder.Volume > 0);
-            return false;
-        }*/
+            decimal bestAsk;
+            decimal bestBid;
+            var marketdepth = MainWindow.Instance.Trader.GetMarketDepth(option);
 
-        decimal getBidPrice(bool urgent=false)
+            if (marketdepth.Bids.First().Volume < 2) bestBid = marketdepth.Bids.FirstOrDefault().Price;
+            else bestBid = marketdepth.Bids.Skip(1).FirstOrDefault().Price;
+            if (marketdepth.Asks.First().Volume < 2) bestAsk = marketdepth.Asks.FirstOrDefault().Price;
+            else bestAsk = marketdepth.Asks.Skip(1).FirstOrDefault().Price;
+
+            if (bestAsk == 0 || bestBid == 0) return option.TheorPrice.GetValueOrDefault();
+            return (bestAsk + bestBid) / 2;
+        }
+
+        decimal getBidPrice()
         {
             //check if quote is mine!
-            var theorPrice = option.TheorPrice.GetValueOrDefault();
-            var bestAsk = option.BestAsk.Price;
-            decimal price;
-            if (bestAsk >= theorPrice) price = urgent ? theorPrice - 10 : theorPrice - 20;
-            else price = urgent ? bestAsk - 20 : bestAsk - 40;
+            var urgent = Math.Abs(checkDelta() * optionsBought - futuresSold) > 0.1M ? true : false;
+            var middle = option.ShrinkPrice(getMiddle(), ShrinkRules.Less);
+            decimal price = urgent ? middle - 10 : middle - 20;
             return price;
         }
-        decimal getAskPrice(bool urgent = false)
+        decimal getAskPrice()
         {
-            var theorPrice = option.TheorPrice.GetValueOrDefault();
-            var BestBid = option.BestBid.Price;
-            decimal price;
-            if (BestBid <= theorPrice) price = urgent ? theorPrice + 10 : theorPrice + 20;
-            else price = urgent ? BestBid + 20 : BestBid + 40;
+            var urgent = Math.Abs(checkDelta() * optionsBought - futuresSold) > 0.1M ? true : false;
+            var middle = option.ShrinkPrice(getMiddle(), ShrinkRules.More);
+            decimal price = urgent ? middle + 10 : middle + 20;
+            var minimalPrice = option.TheorPrice.GetValueOrDefault() + buyPriceDiff + 20;
+            if (price < minimalPrice) price = option.ShrinkPrice(minimalPrice, ShrinkRules.More);  //cant be not profitable
             return price;
         }
     }
 
 
-        abstract class Indicator //history+current time
+    abstract class Indicator //history+current time
     {
         string id { get; set; }
         string name { get; set; }
@@ -598,7 +648,6 @@
             }
         }
     }
-
 
     class Forecast
     {

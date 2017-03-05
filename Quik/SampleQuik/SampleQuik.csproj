@@ -123,12 +123,19 @@
     <Compile Include="ChartWindow.xaml.cs">
       <DependentUpon>ChartWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ConsoleLikeWindow.xaml.cs">
+      <DependentUpon>ConsoleLikeWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Extenders.cs" />
     <Compile Include="History.cs" />
     <Compile Include="MyWin.xaml.cs">
       <DependentUpon>MyWin.xaml</DependentUpon>
     </Compile>
     <Page Include="ChartWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ConsoleLikeWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
