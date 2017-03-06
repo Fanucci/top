@@ -35,227 +35,240 @@ namespace SampleQuik
     using StockSharp.Algo.Candles;
 
     public partial class MainWindow
-	{
-		public QuikTrader Trader;
+    {
+        public QuikTrader Trader;
 
-		private readonly SecuritiesWindow _securitiesWindow = new SecuritiesWindow();
-		private readonly TradesWindow _tradesWindow = new TradesWindow();
-		private readonly MyTradesWindow _myTradesWindow = new MyTradesWindow();
-		private readonly OrdersWindow _ordersWindow = new OrdersWindow();
-		private readonly PortfoliosWindow _portfoliosWindow = new PortfoliosWindow();
-		private readonly StopOrderWindow _stopOrderWindow = new StopOrderWindow();
+        private readonly SecuritiesWindow _securitiesWindow = new SecuritiesWindow();
+        private readonly TradesWindow _tradesWindow = new TradesWindow();
+        private readonly MyTradesWindow _myTradesWindow = new MyTradesWindow();
+        private readonly OrdersWindow _ordersWindow = new OrdersWindow();
+        private readonly PortfoliosWindow _portfoliosWindow = new PortfoliosWindow();
+        private readonly StopOrderWindow _stopOrderWindow = new StopOrderWindow();
         private readonly MyWin _myWin = new MyWin();
+        private readonly ConsoleLikeWindow _consoleWin = new ConsoleLikeWindow();
 
         private readonly LogManager _logManager = new LogManager();
 
-		public MainWindow()
-		{
-			InitializeComponent();
-			Instance = this;
+        public MainWindow()
+        {
+            InitializeComponent();
+            Instance = this;
 
-			Title = Title.Put("QUIK");
+            Title = Title.Put("QUIK");
 
-			_ordersWindow.MakeHideable();
-			_myTradesWindow.MakeHideable();
-			_tradesWindow.MakeHideable();
-			_securitiesWindow.MakeHideable();
-			_stopOrderWindow.MakeHideable();
-			_portfoliosWindow.MakeHideable();
+            _ordersWindow.MakeHideable();
+            _myTradesWindow.MakeHideable();
+            _tradesWindow.MakeHideable();
+            _securitiesWindow.MakeHideable();
+            _stopOrderWindow.MakeHideable();
+            _portfoliosWindow.MakeHideable();
             _myWin.MakeHideable();
+            _consoleWin.MakeHideable();
+
+            ShowOrHide(_consoleWin);
             //-------------------------------
 
             //--------------------------------
             // попробовать сразу найти месторасположение Quik по запущенному процессу
             QuikPath.Folder = QuikTerminal.GetDefaultPath();
 
-			_logManager.Listeners.Add(new FileLogListener("quik_logs.txt"));
-		}
+            _logManager.Listeners.Add(new FileLogListener("quik_logs.txt"));
+        }
 
-		protected override void OnClosing(CancelEventArgs e)
-		{
-			_ordersWindow.DeleteHideable();
-			_myTradesWindow.DeleteHideable();
-			_tradesWindow.DeleteHideable();
-			_securitiesWindow.DeleteHideable();
-			_stopOrderWindow.DeleteHideable();
-			_portfoliosWindow.DeleteHideable();
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            _ordersWindow.DeleteHideable();
+            _myTradesWindow.DeleteHideable();
+            _tradesWindow.DeleteHideable();
+            _securitiesWindow.DeleteHideable();
+            _stopOrderWindow.DeleteHideable();
+            _portfoliosWindow.DeleteHideable();
             _myWin.DeleteHideable();
+            _consoleWin.DeleteHideable();
 
 
             _securitiesWindow.Close();
-			_tradesWindow.Close();
-			_myTradesWindow.Close();
-			_stopOrderWindow.Close();
-			_ordersWindow.Close();
-			_portfoliosWindow.Close();
+            _tradesWindow.Close();
+            _myTradesWindow.Close();
+            _stopOrderWindow.Close();
+            _ordersWindow.Close();
+            _portfoliosWindow.Close();
             _myWin.Close();
+            _consoleWin.Close();
 
             if (Trader != null)
-				Trader.Dispose();
+                Trader.Dispose();
 
-			base.OnClosing(e);
-		}
+            base.OnClosing(e);
+        }
 
-		public static MainWindow Instance { get; private set; }
+        public static MainWindow Instance { get; private set; }
 
-		private bool _isConnected;
+        private bool _isConnected;
 
-		private void ConnectClick(object sender, RoutedEventArgs e)
-		{
-			if (!_isConnected)
-			{
-				var isLua = IsLua.IsChecked == true;
+        private void ConnectClick(object sender, RoutedEventArgs e)
+        {
+            if (!_isConnected)
+            {
+                var isLua = IsLua.IsChecked == true;
 
-				if (isLua)
-				{
-					if (Address.Text.IsEmpty())
-					{
-						MessageBox.Show(this, LocalizedStrings.Str2977);
-						return;
-					}
+                if (isLua)
+                {
+                    if (Address.Text.IsEmpty())
+                    {
+                        MessageBox.Show(this, LocalizedStrings.Str2977);
+                        return;
+                    }
 
-					if (Login.Text.IsEmpty())
-					{
-						MessageBox.Show(this, LocalizedStrings.Str2978);
-						return;
-					}
+                    if (Login.Text.IsEmpty())
+                    {
+                        MessageBox.Show(this, LocalizedStrings.Str2978);
+                        return;
+                    }
 
-					if (Password.Password.IsEmpty())
-					{
-						MessageBox.Show(this, LocalizedStrings.Str2979);
-						return;
-					}
-				}
-				else
-				{
-					if (QuikPath.Folder.IsEmpty())
-					{
-						MessageBox.Show(this, LocalizedStrings.Str2969);
-						return;
-					}
-				}
+                    if (Password.Password.IsEmpty())
+                    {
+                        MessageBox.Show(this, LocalizedStrings.Str2979);
+                        return;
+                    }
+                }
+                else
+                {
+                    if (QuikPath.Folder.IsEmpty())
+                    {
+                        MessageBox.Show(this, LocalizedStrings.Str2969);
+                        return;
+                    }
+                }
 
-				if (Trader == null)
-				{
-					// создаем подключение
-					Trader = isLua
-						? new QuikTrader
-						{
-							LuaFixServerAddress = Address.Text.To<EndPoint>(),
-							LuaLogin = Login.Text,
-							LuaPassword = Password.Password.To<SecureString>()
-						}
-						: new QuikTrader(QuikPath.Folder) { IsDde = true };
+                if (Trader == null)
+                {
+                    // создаем подключение
+                    Trader = isLua
+                        ? new QuikTrader
+                        {
+                            LuaFixServerAddress = Address.Text.To<EndPoint>(),
+                            LuaLogin = Login.Text,
+                            LuaPassword = Password.Password.To<SecureString>()
+                        }
+                        : new QuikTrader(QuikPath.Folder) { IsDde = true };
 
-					Trader.LogLevel = LogLevels.Debug;
+                    Trader.LogLevel = LogLevels.Debug;
 
-					_logManager.Sources.Add(Trader);
+                    _logManager.Sources.Add(Trader);
 
-					// отключение автоматического запроса всех инструментов.
-					Trader.RequestAllSecurities = AllSecurities.IsChecked == true;
+                    // отключение автоматического запроса всех инструментов.
+                    Trader.RequestAllSecurities = AllSecurities.IsChecked == true;
 
-					// возводим флаг, что соединение установлено
-					_isConnected = true;
+                    // возводим флаг, что соединение установлено
+                    _isConnected = true;
 
-					// переподключение будет работать только во время работы биржи РТС
-					// (чтобы отключить переподключение когда торгов нет штатно, например, ночью)
-					Trader.ReConnectionSettings.WorkingTime = ExchangeBoard.Forts.WorkingTime;
+                    // переподключение будет работать только во время работы биржи РТС
+                    // (чтобы отключить переподключение когда торгов нет штатно, например, ночью)
+                    Trader.ReConnectionSettings.WorkingTime = ExchangeBoard.Forts.WorkingTime;
 
-					// подписываемся на событие об успешном восстановлении соединения
-					Trader.Restored += () => this.GuiAsync(() => MessageBox.Show(this, LocalizedStrings.Str2958));
+                    // подписываемся на событие об успешном восстановлении соединения
+                    Trader.Restored += () => this.GuiAsync(() => MessageBox.Show(this, LocalizedStrings.Str2958));
 
-					// подписываемся на событие разрыва соединения
-					Trader.ConnectionError += error => this.GuiAsync(() => MessageBox.Show(this, error.ToString()));
+                    // подписываемся на событие разрыва соединения
+                    Trader.ConnectionError += error => this.GuiAsync(() => MessageBox.Show(this, error.ToString()));
 
-					// подписываемся на ошибку обработки данных (транзакций и маркет)
-					//Trader.Error += error =>
-					//	this.GuiAsync(() => MessageBox.Show(this, error.ToString(), "Ошибка обработки данных"));
+                    // подписываемся на ошибку обработки данных (транзакций и маркет)
+                    //Trader.Error += error =>
+                    //	this.GuiAsync(() => MessageBox.Show(this, error.ToString(), "Ошибка обработки данных"));
 
-					// подписываемся на ошибку подписки маркет-данных
-					Trader.MarketDataSubscriptionFailed += (security, msg, error) =>
-						this.GuiAsync(() => MessageBox.Show(this, error.ToString(), LocalizedStrings.Str2956Params.Put(msg.DataType, security)));
+                    // подписываемся на ошибку подписки маркет-данных
+                    Trader.MarketDataSubscriptionFailed += (security, msg, error) =>
+                        this.GuiAsync(() => MessageBox.Show(this, error.ToString(), LocalizedStrings.Str2956Params.Put(msg.DataType, security)));
 
-					Trader.NewSecurities += securities => _securitiesWindow.SecurityPicker.Securities.AddRange(securities);
-					Trader.NewMyTrades += trades => _myTradesWindow.TradeGrid.Trades.AddRange(trades);
-					Trader.NewTrades += trades => _tradesWindow.TradeGrid.Trades.AddRange(trades);
-					Trader.NewOrders += orders => _ordersWindow.OrderGrid.Orders.AddRange(orders);
-					Trader.NewStopOrders += orders => _stopOrderWindow.OrderGrid.Orders.AddRange(orders);
-					Trader.OrdersRegisterFailed += fails => fails.ForEach(fail => this.GuiAsync(() => MessageBox.Show(this, fail.Error.Message, LocalizedStrings.Str153)));
-					Trader.OrdersCancelFailed += fails => fails.ForEach(fail => this.GuiAsync(() => MessageBox.Show(this, fail.Error.Message, LocalizedStrings.Str2981)));
-					Trader.StopOrdersRegisterFailed += fails => fails.ForEach(fail => this.GuiAsync(() => MessageBox.Show(this, fail.Error.Message, LocalizedStrings.Str153)));
-					Trader.StopOrdersCancelFailed += fails => fails.ForEach(fail => this.GuiAsync(() => MessageBox.Show(this, fail.Error.Message, LocalizedStrings.Str2981)));
-					Trader.NewPortfolios += portfolios => _portfoliosWindow.PortfolioGrid.Portfolios.AddRange(portfolios);
-					Trader.NewPositions += positions => _portfoliosWindow.PortfolioGrid.Positions.AddRange(positions);
+                    Trader.NewSecurities += securities => _securitiesWindow.SecurityPicker.Securities.AddRange(securities);
+                    Trader.NewMyTrades += trades => _myTradesWindow.TradeGrid.Trades.AddRange(trades);
+                    Trader.NewTrades += trades => _tradesWindow.TradeGrid.Trades.AddRange(trades);
+                    Trader.NewOrders += orders => _ordersWindow.OrderGrid.Orders.AddRange(orders);
+                    Trader.NewStopOrders += orders => _stopOrderWindow.OrderGrid.Orders.AddRange(orders);
+                    Trader.OrdersRegisterFailed += fails => fails.ForEach(fail => this.GuiAsync(() => MessageBox.Show(this, fail.Error.Message, LocalizedStrings.Str153)));
+                    Trader.OrdersCancelFailed += fails => fails.ForEach(fail => this.GuiAsync(() => MessageBox.Show(this, fail.Error.Message, LocalizedStrings.Str2981)));
+                    Trader.StopOrdersRegisterFailed += fails => fails.ForEach(fail => this.GuiAsync(() => MessageBox.Show(this, fail.Error.Message, LocalizedStrings.Str153)));
+                    Trader.StopOrdersCancelFailed += fails => fails.ForEach(fail => this.GuiAsync(() => MessageBox.Show(this, fail.Error.Message, LocalizedStrings.Str2981)));
+                    Trader.NewPortfolios += portfolios => _portfoliosWindow.PortfolioGrid.Portfolios.AddRange(portfolios);
+                    Trader.NewPositions += positions => _portfoliosWindow.PortfolioGrid.Positions.AddRange(positions);
 
                     Trader.MassOrderCancelFailed += (transId, error) =>
-						this.GuiAsync(() => MessageBox.Show(this, error.ToString(), LocalizedStrings.Str716));
+                        this.GuiAsync(() => MessageBox.Show(this, error.ToString(), LocalizedStrings.Str716));
 
-					// устанавливаем поставщик маркет-данных
-					_securitiesWindow.SecurityPicker.MarketDataProvider = Trader;
+                    // устанавливаем поставщик маркет-данных
+                    _securitiesWindow.SecurityPicker.MarketDataProvider = Trader;
 
-					ShowSecurities.IsEnabled = ShowTrades.IsEnabled =
-						ShowMyTrades.IsEnabled = ShowOrders.IsEnabled =
-							ShowPortfolios.IsEnabled = ShowStopOrders.IsEnabled = ShowMyWin.IsEnabled = true;
-				}
+                    ShowSecurities.IsEnabled = ShowTrades.IsEnabled =
+                        ShowMyTrades.IsEnabled = ShowOrders.IsEnabled =
+                            ShowPortfolios.IsEnabled = ShowStopOrders.IsEnabled = ShowMyWin.IsEnabled = Console.IsEnabled = true;
+                }
 
-				Trader.Connect();
+                Trader.Connect();
 
-				_isConnected = true;
-				ConnectBtn.Content = LocalizedStrings.Disconnect;
-			}
-			else
-			{
-				Trader.Disconnect();
+                _isConnected = true;
+                ConnectBtn.Content = LocalizedStrings.Disconnect;
+            }
+            else
+            {
+                Trader.Disconnect();
 
-				_isConnected = false;
-				ConnectBtn.Content = LocalizedStrings.Connect;
-			}
-		}
+                _isConnected = false;
+                ConnectBtn.Content = LocalizedStrings.Connect;
+            }
+        }
 
-		private void ShowSecuritiesClick(object sender, RoutedEventArgs e)
-		{
-			ShowOrHide(_securitiesWindow);
-		}
+        private void ShowSecuritiesClick(object sender, RoutedEventArgs e)
+        {
+            ShowOrHide(_securitiesWindow);
+        }
 
-		private void ShowTradesClick(object sender, RoutedEventArgs e)
-		{
-			ShowOrHide(_tradesWindow);
-		}
+        private void ShowTradesClick(object sender, RoutedEventArgs e)
+        {
+            ShowOrHide(_tradesWindow);
+        }
 
-		private void ShowMyTradesClick(object sender, RoutedEventArgs e)
-		{
-			ShowOrHide(_myTradesWindow);
-		}
+        private void ShowMyTradesClick(object sender, RoutedEventArgs e)
+        {
+            ShowOrHide(_myTradesWindow);
+        }
 
-		private void ShowOrdersClick(object sender, RoutedEventArgs e)
-		{
-			ShowOrHide(_ordersWindow);
-		}
+        private void ShowOrdersClick(object sender, RoutedEventArgs e)
+        {
+            ShowOrHide(_ordersWindow);
+        }
 
-		private void ShowPortfoliosClick(object sender, RoutedEventArgs e)
-		{
-			ShowOrHide(_portfoliosWindow);
-		}
+        private void ShowPortfoliosClick(object sender, RoutedEventArgs e)
+        {
+            ShowOrHide(_portfoliosWindow);
+        }
 
-		private void ShowStopOrdersClick(object sender, RoutedEventArgs e)
-		{
-			ShowOrHide(_stopOrderWindow);
-		}
+        private void ShowStopOrdersClick(object sender, RoutedEventArgs e)
+        {
+            ShowOrHide(_stopOrderWindow);
+        }
 
         private void ShowMyWinClick(object sender, RoutedEventArgs e)
         {
             ShowOrHide(_myWin);
         }
 
-        private static void ShowOrHide(Window window)
-		{
-			if (window == null)
-				throw new ArgumentNullException(nameof(window));
+        private void Console_Click(object sender, RoutedEventArgs e)
+        {
+            ShowOrHide(_consoleWin);
+        }
 
-			if (window.Visibility == Visibility.Visible)
-				window.Hide();
-			else
-				window.Show();
-		}
-	}
+        private static void ShowOrHide(Window window)
+        {
+            if (window == null)
+                throw new ArgumentNullException(nameof(window));
+
+            if (window.Visibility == Visibility.Visible)
+                window.Hide();
+            else
+                window.Show();
+        }
+
+
+    }
 }

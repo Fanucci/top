@@ -5,8 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SampleQuik"
         mc:Ignorable="d"
-        Title="ConsoleLikeWindow" Height="300" Width="300">
+        Title="ConsoleLikeWindow" Height="500" Width="700">
     <Grid>
-        <TextBox AcceptsReturn="True" TextWrapping="Wrap" />
+        <TextBox Name="TBox" AcceptsReturn="True" TextWrapping="Wrap" />
     </Grid>
 </Window>
