@@ -45,4 +45,12 @@ namespace SampleQuik
             Volume = tr.Volume;
         }
     }
+ /*  class SecurityExtensions
+    {
+        decimal getTheorPrice(this Security sec)
+        {
+           var BA = sec.UnderlyingSecurityId
+           var d1 = Math.Log(BA/sec.Strike.GetValueOrDefault());
+        }
+    }*/
 }
